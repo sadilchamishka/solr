@@ -39,6 +39,8 @@ import org.apache.solr.core.CoreContainer;
 import org.apache.solr.handler.RequestHandlerUtils;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.SolrQueryResponse;
+import org.apache.solr.security.AuthorizationContext;
+import org.apache.solr.security.PermissionNameProvider;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 
@@ -56,7 +58,7 @@ import static org.apache.solr.security.PermissionNameProvider.Name.ZK_READ_PERM;
  * @lucene.experimental
  */
 
-public class ZookeeperReadAPI {
+public class ZookeeperReadAPI implements PermissionNameProvider {
   private final CoreContainer coreContainer;
 
   public ZookeeperReadAPI(CoreContainer coreContainer) {
@@ -144,4 +146,9 @@ public class ZookeeperReadAPI {
     ew.put("dataLength", stat.getDataLength());
   }
 
+  @Override
+  public Name getPermissionName(AuthorizationContext ctx) {
+    String path = ctx.getResource();
+    return path.contains("/security.json") ? Name.SECURITY_READ_PERM : ZK_READ_PERM;
+  }
 }

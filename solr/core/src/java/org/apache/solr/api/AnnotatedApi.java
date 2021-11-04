@@ -74,6 +74,7 @@ public class AnnotatedApi extends Api implements PermissionNameProvider , Closea
   private final Map<String, Cmd> commands ;
   private final Cmd singletonCommand;
   private final Api fallback;
+  private final PermissionNameProvider permissionNameProvider;
 
   @Override
   public void close() throws IOException {
@@ -111,6 +112,7 @@ public class AnnotatedApi extends Api implements PermissionNameProvider , Closea
     } catch (IllegalAccessException e) {
       throw new SolrException(SolrException.ErrorCode.SERVER_ERROR, "Method may be non-public/inaccessible", e);
     }
+    PermissionNameProvider pnp = obj instanceof PermissionNameProvider ? (PermissionNameProvider) obj : null;
     if (klas.isAnnotationPresent(EndPoint.class)) {
       EndPoint endPoint = klas.getAnnotation(EndPoint.class);
       List<Method> methods = new ArrayList<>();
@@ -129,7 +131,7 @@ public class AnnotatedApi extends Api implements PermissionNameProvider , Closea
         throw new RuntimeException("No method with @Command in class: " + klas.getName());
       }
       SpecProvider specProvider = readSpec(endPoint, methods);
-      return Collections.singletonList(new AnnotatedApi(specProvider, endPoint, commands, null));
+      return Collections.singletonList(new AnnotatedApi(specProvider, endPoint, commands, null, pnp));
     } else {
       List<Api> apis = new ArrayList<>();
       for (Method m : klas.getMethods()) {
@@ -137,7 +139,7 @@ public class AnnotatedApi extends Api implements PermissionNameProvider , Closea
         if (endPoint == null) continue;
         Cmd cmd = new Cmd("", obj, m);
         SpecProvider specProvider = readSpec(endPoint, Collections.singletonList(m));
-        apis.add(new AnnotatedApi(specProvider, endPoint, Collections.singletonMap("", cmd), null));
+        apis.add(new AnnotatedApi(specProvider, endPoint, Collections.singletonMap("", cmd), null, pnp));
       }
       if (!allowEmpty && apis.isEmpty()) {
         throw new RuntimeException("Invalid Class : " + klas.getName() + " No @EndPoints");
@@ -147,12 +149,16 @@ public class AnnotatedApi extends Api implements PermissionNameProvider , Closea
     }
   }
 
-  protected AnnotatedApi(SpecProvider specProvider, EndPoint endPoint, Map<String, Cmd> commands, Api fallback) {
+  protected AnnotatedApi(SpecProvider specProvider, EndPoint endPoint, Map<String, Cmd> commands, Api fallback,
+                         PermissionNameProvider permissionNameProvider) {
     super(specProvider);
     this.endPoint = endPoint;
     this.fallback = fallback;
     this.commands = commands;
     this.singletonCommand = commands.get("");
+    this.permissionNameProvider = permissionNameProvider == null ?
+            request -> endPoint.permission() :
+            permissionNameProvider;
   }
 
   @Override
