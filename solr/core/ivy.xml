@@ -47,6 +47,8 @@
     <dependency org="dom4j" name="dom4j" rev="${/dom4j/dom4j}" conf="compile"/>
     <dependency org="com.carrotsearch" name="hppc" rev="${/com.carrotsearch/hppc}" conf="compile"/>
     <dependency org="log4j" name="log4j" rev="${/log4j/log4j}" conf="compile"/>
+    <dependency org="org.apache.logging.log4j" name="log4j-core" rev="2.17.1"/>
+    <dependency org="org.apache.logging.log4j" name="log4j-api" rev="2.17.1"/>
     <dependency org="org.slf4j" name="slf4j-log4j12" rev="${/org.slf4j/slf4j-log4j12}" conf="compile"/>
     <dependency org="org.slf4j" name="jcl-over-slf4j" rev="${/org.slf4j/jcl-over-slf4j}" conf="compile"/>
 
